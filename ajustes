@@ -1,0 +1,147 @@
+class ContaBancaria:
+    def __init__(self, numero, titular):
+        self.numero = numero
+        self.titular = titular
+        self.saldo = 0
+        self.limite = 500
+        self.extrato = ""
+        self.numero_saques = 0
+        self.limite_saques = 3
+        self.limite_diario_saques = 1000
+        self.saques_dia = 0
+
+    def depositar(self, valor):
+        if valor > 0:
+            self.saldo += valor
+            self.extrato += f"Depósito: R$ {valor:.2f}\n"
+            print(f"Depósito de {valor:.2f} concluído :)")
+        else:
+            print("Operação falhou :(. O valor informado é inválido.")
+
+    def sacar(self, valor):
+        if valor <= 0:
+            print("Operação falhou :(. O valor informado é inválido.")
+        elif valor > self.saldo:
+            print("Operação falhou :(. Você não tem saldo suficiente.")
+        elif valor > self.limite:
+            print("Operação falhou :(. O valor do saque excede o limite.")
+        elif self.numero_saques >= self.limite_saques:
+            print("Operação falhou :(. Número máximo de saques excedido.")
+        elif self.saques_dia + valor > self.limite_diario_saques:
+            print("Operação falhou :(. Você excedeu o limite diário de saques.")
+        else:
+            self.saldo -= valor
+            self.extrato += f"Saque: R$ {valor:.2f}\n"
+            self.numero_saques += 1
+            self.saques_dia += valor
+            print(f"Saque de {valor:.2f} realizado com sucesso.")
+
+    def exibir_extrato(self):
+        print("\n        EXTRATO        ")
+        print("Não foram realizadas movimentações." if not self.extrato else self.extrato)
+        print(f"\nSaldo: R$ {self.saldo:.2f}")
+        print("        ")
+
+    def transferir(self, valor, conta_destino):
+        if valor <= 0:
+            print("Operação falhou :(. O valor informado é inválido.")
+        elif valor > self.saldo:
+            print("Operação falhou :(. Você não tem saldo suficiente.")
+        else:
+            self.saldo -= valor
+            conta_destino.saldo += valor
+            self.extrato += f"Transferência: R$ {valor:.2f} para conta {conta_destino.numero}\n"
+            conta_destino.extrato += f"Transferência: R$ {valor:.2f} da conta {self.numero}\n"
+            print(f"Transferência de {valor:.2f} para conta {conta_destino.numero} realizada com sucesso.")
+
+    def alterar_limite_saque(self, novo_limite):
+        if novo_limite > 0:
+            self.limite = novo_limite
+            print(f"Novo limite de saque definido para R$ {novo_limite:.2f}.")
+        else:
+            print("Operação falhou :(. O valor informado é inválido.")
+
+
+contas = {}
+
+def criar_conta(numero, titular):
+    if numero in contas:
+        print("Número de conta já existente. Tente outro número.")
+    else:
+        contas[numero] = ContaBancaria(numero, titular)
+        print(f"Conta {numero} criada com sucesso para {titular}.")
+
+def selecionar_conta():
+    numero = input("Informe o número da conta: ")
+    if numero in contas:
+        return contas[numero]
+    else:
+        print("Conta não encontrada.")
+        return None
+
+menu_principal = """
+[c] Criar Conta
+[s] Selecionar Conta
+[r] Sair
+
+"""
+
+menu_conta = """
+[d] Depositar
+[s] Sacar
+[e] Extrato
+[t] Transferir
+[l] Alterar Limite de Saque
+[v] Voltar
+
+"""
+
+while True:
+    opcao = input(menu_principal)
+
+    if opcao == "c":
+        numero = input("Informe o número da conta: ")
+        titular = input("Informe o nome do titular: ")
+        criar_conta(numero, titular)
+
+    elif opcao == "s":
+        conta = selecionar_conta()
+        if conta:
+            while True:
+                opcao_conta = input(menu_conta)
+
+                if opcao_conta == "d":
+                    valor = float(input("Informe o valor do depósito: "))
+                    conta.depositar(valor)
+
+                elif opcao_conta == "s":
+                    valor = float(input("Informe o valor do saque: "))
+                    conta.sacar(valor)
+
+                elif opcao_conta == "e":
+                    conta.exibir_extrato()
+
+                elif opcao_conta == "t":
+                    valor = float(input("Informe o valor da transferência: "))
+                    numero_destino = input("Informe o número da conta destino: ")
+                    conta_destino = contas.get(numero_destino)
+                    if conta_destino:
+                        conta.transferir(valor, conta_destino)
+                    else:
+                        print("Conta destino não encontrada.")
+
+                elif opcao_conta == "l":
+                    novo_limite = float(input("Informe o novo limite de saque: "))
+                    conta.alterar_limite_saque(novo_limite)
+
+                elif opcao_conta == "v":
+                    break
+
+                else:
+                    print("Operação Inválida. Selecione a operação desejada.")
+
+    elif opcao == "r":
+        break
+
+    else:
+        print("Operação Inválida. Selecione a operação desejada.")
